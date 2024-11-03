@@ -1,73 +1,149 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calendario de Días Restantes</title>
-  <style>
-    body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; }
-    h1 { text-align: center; }
-    .calendar { display: flex; flex-wrap: wrap; max-width: 500px; gap: 5px; margin: 20px 0; }
-    .day { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border: 1px solid #333; cursor: pointer; }
-    .day.tachado { background-color: #f0f0f0; text-decoration: line-through; color: #999; }
-    .remaining-days { margin-top: 20px; font-size: 1.2em; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario de Fin de Año</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f7f7f7;
+        }
+        .calendar-container {
+            width: 90%;
+            max-width: 800px;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .month {
+            margin-top: 20px;
+        }
+        .month-name {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+        .weekdays, .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            text-align: center;
+        }
+        .weekdays div {
+            font-weight: bold;
+            color: #555;
+        }
+        .day {
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #333;
+            transition: background-color 0.2s;
+        }
+        .day:hover {
+            background-color: #ddd;
+        }
+        .day.ticked {
+            background-color: #007bff;
+            color: white;
+            text-decoration: line-through;
+        }
+    </style>
 </head>
 <body>
-  <h1>Calendario hasta fin de año</h1>
-  <div class="calendar" id="calendar"></div>
-  <div class="remaining-days" id="remainingDays"></div>
+    <div class="calendar-container">
+        <h1>Calendario de Fin de Año</h1>
+        <div id="calendar"></div>
+        <p style="text-align: center; margin-top: 20px;">
+            <strong id="daysLeft"></strong> días restantes hasta el 31 de diciembre
+        </p>
+    </div>
 
-  <script>
-    const today = new Date();
-    const endOfYear = new Date(today.getFullYear(), 11, 31);
-    const calendar = document.getElementById('calendar');
-    const remainingDaysEl = document.getElementById('remainingDays');
-    const tachados = JSON.parse(localStorage.getItem('tachados')) || [];
+    <script>
+        const calendarElement = document.getElementById('calendar');
+        const daysLeftElement = document.getElementById('daysLeft');
+        const today = new Date();
+        const endOfYear = new Date(today.getFullYear(), 11, 31);
 
-    function renderCalendar() {
-      let currentDate = new Date(today);
-      let remainingDays = 0;
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
-      while (currentDate <= endOfYear) {
-        const dayDiv = document.createElement('div');
-        dayDiv.className = 'day';
-        dayDiv.textContent = currentDate.getDate();
+        let daysLeft = Math.ceil((endOfYear - today) / (1000 * 60 * 60 * 24));
+        daysLeftElement.textContent = daysLeft;
 
-        const dateKey = currentDate.toISOString().split('T')[0];
-        if (tachados.includes(dateKey)) {
-          dayDiv.classList.add('tachado');
-        } else {
-          remainingDays++;
+        function renderCalendar() {
+            let currentDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+            for (let month = today.getMonth(); month <= 11; month++) {
+                const monthDiv = document.createElement('div');
+                monthDiv.classList.add('month');
+
+                const monthName = document.createElement('div');
+                monthName.classList.add('month-name');
+                monthName.textContent = monthNames[month];
+                monthDiv.appendChild(monthName);
+
+                const weekdaysDiv = document.createElement('div');
+                weekdaysDiv.classList.add('weekdays');
+                dayNames.forEach(day => {
+                    const dayElement = document.createElement('div');
+                    dayElement.textContent = day;
+                    weekdaysDiv.appendChild(dayElement);
+                });
+                monthDiv.appendChild(weekdaysDiv);
+
+                const daysDiv = document.createElement('div');
+                daysDiv.classList.add('days');
+
+                const firstDay = new Date(today.getFullYear(), month, 1).getDay();
+                for (let i = 0; i < firstDay; i++) {
+                    const emptyDiv = document.createElement('div');
+                    daysDiv.appendChild(emptyDiv);
+                }
+
+                while (currentDate.getMonth() === month) {
+                    const dayElement = document.createElement('div');
+                    dayElement.classList.add('day');
+                    dayElement.textContent = currentDate.getDate();
+
+                    if (currentDate < today) {
+                        dayElement.classList.add('ticked');
+                    }
+
+                    dayElement.addEventListener('click', () => {
+                        if (!dayElement.classList.contains('ticked')) {
+                            dayElement.classList.add('ticked');
+                            daysLeft--;
+                            daysLeftElement.textContent = daysLeft;
+                        } else {
+                            dayElement.classList.remove('ticked');
+                            daysLeft++;
+                            daysLeftElement.textContent = daysLeft;
+                        }
+                    });
+
+                    daysDiv.appendChild(dayElement);
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+
+                monthDiv.appendChild(daysDiv);
+                calendarElement.appendChild(monthDiv);
+            }
         }
 
-        dayDiv.onclick = () => toggleTachado(dayDiv, dateKey);
-        calendar.appendChild(dayDiv);
-
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-
-      remainingDaysEl.textContent = `Días restantes: ${remainingDays}`;
-    }
-
-    function toggleTachado(dayDiv, dateKey) {
-      if (dayDiv.classList.toggle('tachado')) {
-        tachados.push(dateKey);
-      } else {
-        const index = tachados.indexOf(dateKey);
-        if (index > -1) tachados.splice(index, 1);
-      }
-      localStorage.setItem('tachados', JSON.stringify(tachados));
-      updateRemainingDays();
-    }
-
-    function updateRemainingDays() {
-      const totalDays = Array.from(document.querySelectorAll('.day'));
-      const remaining = totalDays.filter(day => !day.classList.contains('tachado')).length;
-      remainingDaysEl.textContent = `Días restantes: ${remaining}`;
-    }
-
-    renderCalendar();
-  </script>
+        renderCalendar();
+    </script>
 </body>
 </html>
