@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendario de Días Restantes</title>
+  <style>
+    body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; }
+    h1 { text-align: center; }
+    .calendar { display: flex; flex-wrap: wrap; max-width: 500px; gap: 5px; margin: 20px 0; }
+    .day { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border: 1px solid #333; cursor: pointer; }
+    .day.tachado { background-color: #f0f0f0; text-decoration: line-through; color: #999; }
+    .remaining-days { margin-top: 20px; font-size: 1.2em; }
+  </style>
+</head>
+<body>
+  <h1>Calendario hasta fin de año</h1>
+  <div class="calendar" id="calendar"></div>
+  <div class="remaining-days" id="remainingDays"></div>
+
+  <script>
+    const today = new Date();
+    const endOfYear = new Date(today.getFullYear(), 11, 31);
+    const calendar = document.getElementById('calendar');
+    const remainingDaysEl = document.getElementById('remainingDays');
+    const tachados = JSON.parse(localStorage.getItem('tachados')) || [];
+
+    function renderCalendar() {
+      let currentDate = new Date(today);
+      let remainingDays = 0;
+
+      while (currentDate <= endOfYear) {
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'day';
+        dayDiv.textContent = currentDate.getDate();
+
+        const dateKey = currentDate.toISOString().split('T')[0];
+        if (tachados.includes(dateKey)) {
+          dayDiv.classList.add('tachado');
+        } else {
+          remainingDays++;
+        }
+
+        dayDiv.onclick = () => toggleTachado(dayDiv, dateKey);
+        calendar.appendChild(dayDiv);
+
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      remainingDaysEl.textContent = `Días restantes: ${remainingDays}`;
+    }
+
+    function toggleTachado(dayDiv, dateKey) {
+      if (dayDiv.classList.toggle('tachado')) {
+        tachados.push(dateKey);
+      } else {
+        const index = tachados.indexOf(dateKey);
+        if (index > -1) tachados.splice(index, 1);
+      }
+      localStorage.setItem('tachados', JSON.stringify(tachados));
+      updateRemainingDays();
+    }
+
+    function updateRemainingDays() {
+      const totalDays = Array.from(document.querySelectorAll('.day'));
+      const remaining = totalDays.filter(day => !day.classList.contains('tachado')).length;
+      remainingDaysEl.textContent = `Días restantes: ${remaining}`;
+    }
+
+    renderCalendar();
+  </script>
+</body>
+</html>
