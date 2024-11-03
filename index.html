@@ -84,8 +84,6 @@
         daysLeftElement.textContent = daysLeft;
 
         function renderCalendar() {
-            let currentDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-
             for (let month = today.getMonth(); month <= 11; month++) {
                 const monthDiv = document.createElement('div');
                 monthDiv.classList.add('month');
@@ -107,12 +105,18 @@
                 const daysDiv = document.createElement('div');
                 daysDiv.classList.add('days');
 
-                const firstDay = new Date(today.getFullYear(), month, 1).getDay();
-                for (let i = 0; i < firstDay; i++) {
+                // Primer día de cada mes
+                const firstDayOfMonth = new Date(today.getFullYear(), month, 1);
+                const firstDayWeekday = firstDayOfMonth.getDay();
+
+                // Añadir espacios vacíos hasta el primer día del mes
+                for (let i = 0; i < firstDayWeekday; i++) {
                     const emptyDiv = document.createElement('div');
                     daysDiv.appendChild(emptyDiv);
                 }
 
+                // Generar los días del mes
+                let currentDate = new Date(today.getFullYear(), month, 1);
                 while (currentDate.getMonth() === month) {
                     const dayElement = document.createElement('div');
                     dayElement.classList.add('day');
